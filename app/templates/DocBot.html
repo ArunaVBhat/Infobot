@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocBot</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 30px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            text-align: center;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .chat-box {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .chat-message {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .chat-message img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        .chat-message.user {
+            justify-content: flex-end;
+        }
+        .chat-message.user img {
+            margin-left: 10px;
+        }
+        .user-message {
+            background-color: #88C9E6;
+            color: #1a1a1a;
+            padding: 12px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+            text-align: right;
+        }
+        .chat-message.bot {
+            justify-content: flex-start;
+        }
+        .chat-message.bot img {
+            margin-right: 10px;
+        }
+        .bot-message {
+            background-color: #F1F1F1;
+            color: #333;
+            padding: 12px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+            text-align: left;
+        }
+        .input-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        #doc-user-input {
+            width: 80%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        #doc-send-btn, #upload-btn {
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #doc-send-btn:hover, #upload-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>Chat with DocBot</h2>
+        </div>
+        <div id="doc-chat-box" class="chat-box"></div>
+
+        <div class="input-container">
+            <input type="text" id="doc-user-input" placeholder="Type your message..." />
+            <button id="doc-send-btn">Send</button>
+        </div>
+
+        <div class="input-container" style="margin-top: 20px;">
+            <input type="file" id="file-input" multiple />
+            <button id="upload-btn" disabled>Upload</button>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = localStorage.getItem("session_id") || '';
+
+        function addBotMessage(text) {
+            let messageId = "bot-msg-" + new Date().getTime();
+            let messageHtml = `
+                <div class="chat-message bot" id="${messageId}">
+                    <img src="https://bot.brlps.in/static/media/askDidiLogo.dc9fae18b857209ea1f6.jpeg" alt="bot">
+                    <div class="bot-message">${text}</div>
+                </div>
+            `;
+            $("#doc-chat-box").append(messageHtml);
+            scrollChatToBottom();
+            return messageId;
+        }
+
+        function addUserMessage(text) {
+            $("#doc-chat-box").append(`
+                <div class="chat-message user">
+                    <div class="user-message">${text}</div>
+                    <img src="https://static.vecteezy.com/system/resources/thumbnails/009/280/351/small_2x/young-boy-face-illustration-design-free-vector.jpg" alt="user">
+                </div>
+            `);
+            scrollChatToBottom();
+        }
+
+        function scrollChatToBottom() {
+            $("#doc-chat-box").stop().animate({ scrollTop: $("#doc-chat-box")[0].scrollHeight }, 500);
+        }
+
+        $("#file-input").on("change", function() {
+            $("#upload-btn").prop("disabled", this.files.length === 0);
+        });
+
+        $("#upload-btn").click(function () {
+            const files = $("#file-input")[0].files;
+            if (!files.length) {
+                addBotMessage("Please select a document to upload.");
+                return;
+            }
+
+            const formData = new FormData();
+            for (let file of files) {
+                formData.append("files", file);
+            }
+
+            let msgId = addBotMessage("Uploading documents...");
+
+            fetch("http://127.0.0.1:5000/docbot/upload", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                sessionId = data.session_id;
+                localStorage.setItem("session_id", sessionId);
+                $("#" + msgId).find(".bot-message").text("Documents uploaded successfully! You can now ask questions.");
+            })
+            .catch(error => {
+                console.error("Error uploading document:", error);
+                $("#" + msgId).find(".bot-message").text("Upload failed. Try again.");
+            });
+        });
+
+        $("#doc-send-btn").click(sendMessage);
+        $("#doc-user-input").keypress(function (e) {
+            if (e.which === 13) sendMessage();
+        });
+
+        function sendMessage() {
+            const question = $("#doc-user-input").val().trim();
+            if (!question) return;
+            if (!sessionId) {
+                addBotMessage("Please upload a document first.");
+                return;
+            }
+
+            addUserMessage(question);
+            $("#doc-user-input").val("");
+
+            let msgId = addBotMessage("Thinking...");
+
+            fetch("http://127.0.0.1:5000/docbot/query", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query: question, session_id: sessionId })
+            })
+            .then(response => {
+    console.log("Raw response:", response);
+    return response.json();
+})
+.then(data => {
+    console.log("Parsed response:", data);
+    const answer = data.answer ? data.answer : "No answer received.";
+    $(".chat-message.bot").last().find(".bot-message").text(answer);
+})
+
+            .catch(error => {
+                console.error("Error fetching response:", error);
+                $("#" + msgId).find(".bot-message").text("Failed to fetch response.");
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+        #chatbox {
+            width: 80%;
+            max-width: 600px;
+            height: 70%;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            background: #fff;
+            margin-bottom: 10px;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .user {
+            background-color: #d1f7c4;
+            align-self: flex-end;
+            text-align: right;
+        }
+        .bot {
+            background-color: #f1f0f0;
+            align-self: flex-start;
+            text-align: left;
+        }
+        #inputSection {
+            width: 80%;
+            max-width: 600px;
+            display: flex;
+        }
+        #userInput {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chat with the College InfoBot</h1>
+    <div id="chatbox"></div>
+    <div id="inputSection">
+        <input type="text" id="userInput" placeholder="Ask me anything...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const userInput = document.getElementById("userInput").value;
+            if (!userInput.trim()) return; // Prevent empty messages
+            addMessage(userInput, "user");
+
+            const response = await fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userInput, lang: "en" })
+            });
+
+            const data = await response.json();
+            addMessage(data.response, "bot");
+            document.getElementById("userInput").value = ""; // Clear input box
+        }
+
+        function addMessage(text, type) {
+            const chatbox = document.getElementById("chatbox");
+            const message = document.createElement("div");
+            message.classList.add("message", type);
+            message.textContent = text;
+            chatbox.appendChild(message);
+            chatbox.scrollTop = chatbox.scrollHeight; // Scroll to the latest message
+        }
+    </script>
+</body>
+</html>

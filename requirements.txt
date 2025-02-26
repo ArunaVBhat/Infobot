@@ -1,0 +1,11 @@
+Flask~=3.1.0
+speechrecognition
+gTTS~=2.5.4
+bs4~=0.0.2
+requests~=2.32.3
+beautifulsoup4~=4.12.3
+fuzzywuzzy
+spacy
+langdetect
+googletrans
+deep_translator
