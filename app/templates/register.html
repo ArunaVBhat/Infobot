@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            background: linear-gradient(to right, #dfe9f3, #ffffff);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 350px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        h2 { color: #4A00E0; }
+        label { display: block; margin: 10px 0 5px; font-weight: bold; }
+        input, select {
+            width: 90%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #4A00E0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background: #764ba2; }
+        .error-message { color: red; font-size: 12px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Register for Infobot</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form id="registerForm" action="{{ url_for('register') }}" method="POST" onsubmit="return validateForm()">
+        <label for="user_type">User Type:</label>
+        <select id="user_type" name="user_type" onchange="toggleFields()">
+            <option value="student">Student</option>
+            <option value="staff">Staff</option>
+        </select>
+
+        <label for="name">Full Name:</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="email">College Email ID:</label>
+        <input type="email" id="email" name="email" required>
+        <div id="emailError" class="error-message">Invalid college email format.</div>
+
+        <div id="studentFields">
+            <label for="usn">USN:</label>
+            <input type="text" id="usn" name="usn">
+            <div id="usnError" class="error-message">USN must be 10 alphanumeric characters.</div>
+
+            <label for="batch">Batch:</label>
+            <input type="text" id="batch" name="batch">
+
+            <label for="branch">Branch:</label>
+            <input type="text" id="branch" name="branch">
+
+            <label for="pass_out_year">Pass-out Year:</label>
+            <input type="text" id="pass_out_year" name="pass_out_year">
+        </div>
+
+        <div id="staffFields" style="display: none;">
+            <label for="unique_id">Staff Unique ID:</label>
+            <input type="text" id="unique_id" name="unique_id">
+        </div>
+
+        <button type="submit">Register</button>
+    </form>
+
+    <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+</div>
+
+<script>
+    function toggleFields() {
+        let userType = document.getElementById("user_type").value;
+        document.getElementById("studentFields").style.display = (userType === "student") ? "block" : "none";
+        document.getElementById("staffFields").style.display = (userType === "staff") ? "block" : "none";
+    }
+</script>
+
+</body>
+</html>

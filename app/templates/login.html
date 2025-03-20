@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        /* Center the login container */
+        body {
+    background: linear-gradient(to right, #dfe9f3, #ffffff); /* Soft pastel gradient */
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+}
+
+
+        .container {
+            width: 350px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #4A00E0;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 90%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #4A00E0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        .flash {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .flash.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .flash.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 12px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Login to Infobot</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form id="loginForm" action="{{ url_for('login') }}" method="POST" onsubmit="return validateForm()">
+        <label for="email">College Email ID:</label>
+        <input type="email" id="email" name="email" required>
+        <div id="emailError" class="error-message">Invalid college email format.</div>
+
+        <label for="usn">USN:</label>
+        <input type="text" id="usn" name="usn" required>
+        <div id="usnError" class="error-message">USN must be 10 alphanumeric characters.</div>
+
+        <button type="submit">Login</button>
+    </form>
+
+    <p>Don't have an account? <a href="{{ url_for('register') }}">Register Now</a></p>
+</div>
+
+<script>
+    function validateForm() {
+        let email = document.getElementById("email").value;
+        let usn = document.getElementById("usn").value;
+        let emailError = document.getElementById("emailError");
+        let usnError = document.getElementById("usnError");
+
+        let emailPattern = /^[a-z0-9]+@klsvdit\.edu\.in$/; // College email validation
+        let usnPattern = /^[a-zA-Z0-9]{10}$/; // USN validation (10 alphanumeric chars)
+
+        let valid = true;
+
+        if (!emailPattern.test(email)) {
+            emailError.style.display = "block";
+            valid = false;
+        } else {
+            emailError.style.display = "none";
+        }
+
+        if (!usnPattern.test(usn)) {
+            usnError.style.display = "block";
+            valid = false;
+        } else {
+            usnError.style.display = "none";
+        }
+
+        return valid;
+    }
+</script>
+
+</body>
+</html>

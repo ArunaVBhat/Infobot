@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff/Student Chat</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* General Layout */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background: #FFFFFF;
+            color: black;
+            height: 100vh;
+            transition: all 0.3s;
+            position: fixed;
+            left: -250px;
+            top: 0;
+            padding-top: 60px;
+            overflow: hidden;
+        }
+
+        .sidebar a {
+            display: block;
+            color: black;
+            padding: 15px;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            background: #34495e;
+            color: white;
+        }
+
+        .hamburger-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 30px;
+            color: black;
+        }
+
+        .hamburger-btn:hover {
+            color: #34495e;
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        /* Chat container styles */
+        .chat-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 30px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            text-align: center;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .chat-box {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+
+        .chat-message {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .chat-message img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .chat-message.user { justify-content: flex-end; }
+        .chat-message.user img { margin-left: 10px; }
+        .chat-message.bot { justify-content: flex-start; }
+        .chat-message.bot img { margin-right: 10px; }
+
+        .user-message, .bot-message {
+            padding: 12px 16px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .user-message { background-color: #88C9E6; text-align: right; }
+        .bot-message { background-color: #F1F1F1; text-align: left; }
+
+        .input-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        #user-input {
+            width: 80%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        #send-btn {
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #send-btn:hover { background-color: #45a049; }
+
+        /* Suggestive Queries */
+        #suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .suggestion {
+            background-color: #e0e0e0;
+            padding: 8px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .suggestion:hover { background-color: #d4d4d4; }
+
+        /* Voice Buttons */
+        .voice-btns {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        #mic-btn, #speaker-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 30px;
+            color: #4CAF50;
+        }
+
+        #mic-btn:hover, #speaker-btn:hover { color: #45a049; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('docbot')}}">DocBot</a></li>
+                <li><a href="{{ url_for('about') }}">Suggestions</a></li>
+            </ul>
+        </div>
+
+        <button class="hamburger-btn" id="hamburger-btn">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>Chat with our InfoBot</h2>
+            </div>
+            <div id="chat-box" class="chat-box"></div>
+            <div id="suggestions"></div>
+            <div class="input-container">
+                <input type="text" id="user-input" placeholder="Type your message..." />
+                <button id="send-btn">Send</button>
+            </div>
+            <div class="voice-btns">
+                <button id="mic-btn"><i class="fas fa-microphone"></i></button>
+                <button id="speaker-btn"><i class="fas fa-volume-up"></i></button>
+            </div>
+        </div>
+    </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    const userImage = "https://static.vecteezy.com/system/resources/thumbnails/009/280/351/small_2x/young-boy-face-illustration-design-free-vector.jpg";
+    const botImage = "https://bot.brlps.in/static/media/askDidiLogo.dc9fae18b857209ea1f6.jpeg"; // Placeholder bot image
+
+    // Function to add bot messages
+    function addBotMessage(text, withImage = true) {
+        $('#chat-box').append(`
+            <div class="chat-message bot">
+                ${withImage ? `<img src="${botImage}" alt="bot">` : ''}
+                <div class="bot-message">${text}</div>
+            </div>
+        `);
+        scrollChatToBottom();
+        if (text !== "Processing your request...") {
+            speakText(text);
+        }
+    }
+
+    // Function to add user messages
+    function addUserMessage(text) {
+        $('#chat-box').append(`
+            <div class="chat-message user">
+                <div class="user-message">${text}</div>
+                <img src="${userImage}" alt="user">
+            </div>
+        `);
+        scrollChatToBottom();
+    }
+
+    // Function to send messages
+    function sendMessage(query) {
+        if (!query) {
+            query = $('#user-input').val().trim();
+            if (query === "") return;
+        }
+
+        addUserMessage(query);
+        $('#user-input').val('');
+        $('#suggestions').hide();
+
+        addBotMessage("Processing your request...", false);
+
+        fetch('/infobot/query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: query })
+        })
+        .then(response => response.json())
+        .then(data => {
+            $('.bot-message:contains("Processing your request...")').remove();
+            addBotMessage(data.response || "Sorry, I didn't get that.");
+        })
+        .catch(error => {
+            console.error('Error fetching bot response:', error);
+            addBotMessage("Sorry, I couldn't fetch a response.");
+        });
+    }
+
+    // Function to show suggestions
+    function showSuggestions(suggestions) {
+        $('#suggestions').html('');
+        suggestions.forEach(suggestion => {
+            $('#suggestions').append(`<div class="suggestion" onclick="sendMessage('${suggestion}'); $('#suggestions').hide();">${suggestion}</div>`);
+        });
+        $('#suggestions').show();
+    }
+
+    // Initial greeting and suggestions
+    $(document).ready(function() {
+        addBotMessage("Hello! I am your InfoBot. Click a question below or type your query.", true);
+        showSuggestions([
+            "what courses are offered?",
+            "Who is the principal of VDIT?",
+            "How can I contact the college administration?"
+        ]);
+    });
+
+    // Scroll chat box
+    function scrollChatToBottom() {
+        $('#chat-box').scrollTop($('#chat-box')[0].scrollHeight);
+    }
+
+    // Send message on button click
+    $('#send-btn').on('click', function() {
+        sendMessage();
+    });
+
+    // Send message on Enter key press
+    $('#user-input').on('keypress', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            sendMessage();
+        }
+    });
+
+    // Function to speak text
+    function speakText(text) {
+        const speech = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(speech);
+    }
+
+    // Function to handle microphone input
+    function handleMicInput() {
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+
+        recognition.onstart = function () {
+            addBotMessage("Listening...", false);
+        };
+
+        recognition.onspeechend = function () {
+            recognition.stop();
+        };
+
+        recognition.onresult = function (event) {
+            const transcript = event.results[0][0].transcript;
+            $('.bot-message:contains("Listening...")').remove();
+            sendMessage(transcript);
+        };
+
+        recognition.onerror = function (event) {
+            $('.bot-message:contains("Listening...")').remove();
+            addBotMessage("Sorry, I couldn't understand that.");
+        };
+
+        recognition.start();
+    }
+
+    // Correct event handling for the hamburger button
+    $('#hamburger-btn').on('click',function() {
+        $('#sidebar').toggleClass('open');
+    });
+
+    // Handle mic button click
+    $('#mic-btn').on('click', handleMicInput);
+
+    // Handle speaker button click
+    $('#speaker-btn').on('click', function() {
+        const lastBotMessage = $('.bot-message').last().text();
+        speakText(lastBotMessage);
+    });
+
+</script>
+</body>
+</html>
